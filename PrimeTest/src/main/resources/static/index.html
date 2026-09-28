@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeTest</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f5f7fa;
+        }
+        .card {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,.08);
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .result {
+            white-space: pre-wrap;
+            background: #f0f2f5;
+            padding: 18px;
+            border-radius: 8px;
+            min-height: 80px;
+        }
+        h1 { margin-bottom: 4px; }
+        .subtitle { color: #666; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>PrimeTest</h1>
+    <div class="subtitle">Large Prime Analysis & Validation Platform</div>
+
+    <label for="number">Large Integer</label>
+    <input id="number" type="text" placeholder="Enter a large integer">
+
+    <label for="iterations">Miller-Rabin Iterations</label>
+    <input id="iterations" type="number" min="1" value="10">
+
+    <button onclick="checkPrime()">CHECK PRIME</button>
+
+    <h2>Result</h2>
+    <div id="result" class="result">Enter a number and click CHECK PRIME.</div>
+</div>
+
+<script>
+async function checkPrime() {
+    const number = document.getElementById("number").value.trim();
+    const iterations = document.getElementById("iterations").value;
+
+    if (!/^[0-9]+$/.test(number)) {
+        document.getElementById("result").textContent =
+            "Please enter a non-negative integer.";
+        return;
+    }
+
+    document.getElementById("result").textContent = "Running Miller-Rabin...";
+
+    try {
+        const response = await fetch(
+            `/api/prime/check?number=${encodeURIComponent(number)}&iterations=${encodeURIComponent(iterations)}`
+        );
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const data = await response.json();
+
+        document.getElementById("result").textContent =
+`Result              : ${data.millerRabinResult}
+Traditional Result  : ${data.traditionalResult}
+Iterations          : ${data.iterations}
+Bit Length          : ${data.bitLength}
+Miller-Rabin Time   : ${data.millerRabinTimeMs.toFixed(4)} ms
+Traditional Time    : ${data.traditionalTimeMs.toFixed(4)} ms
+Confidence          : >= ${data.confidencePercentage.toFixed(10)}%
+Error Upper Bound   : <= ${data.errorProbabilityUpperBound}`;
+    } catch (error) {
+        document.getElementById("result").textContent =
+            "Error: " + error.message;
+    }
+}
+</script>
+</body>
+</html>
